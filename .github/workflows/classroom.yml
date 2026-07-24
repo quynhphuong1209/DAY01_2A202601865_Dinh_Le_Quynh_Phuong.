@@ -1,0 +1,60 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: 'Task 1: Call OpenAI'
+      id: task-1-call-openai
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Task 1: Call OpenAI'
+        setup-command: pip install -r requirements.txt
+        command: pytest tests/test_template.py -k "TestCallOpenAI" -v
+        timeout: 10
+        max-score: 30
+    - name: 'Task 2: Call Gemini'
+      id: task-2-call-gemini
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Task 2: Call Gemini'
+        setup-command: ''
+        command: pytest tests/test_template.py -k "TestCallGemini" -v
+        timeout: 10
+        max-score: 30
+    - name: 'Task 3: Compare Models'
+      id: task-3-compare-models
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Task 3: Compare Models'
+        setup-command: ''
+        command: pytest tests/test_template.py -k "TestCompareModels" -v
+        timeout: 10
+        max-score: 20
+    - name: 'Task 4: Streaming Chat'
+      id: task-4-streaming-chat
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Task 4: Streaming Chat'
+        setup-command: ''
+        command: pytest tests/test_template.py -k "TestCompareModels" -v
+        timeout: 10
+        max-score: 20
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        TASK-1-CALL-OPENAI_RESULTS: "${{steps.task-1-call-openai.outputs.result}}"
+        TASK-2-CALL-GEMINI_RESULTS: "${{steps.task-2-call-gemini.outputs.result}}"
+        TASK-3-COMPARE-MODELS_RESULTS: "${{steps.task-3-compare-models.outputs.result}}"
+        TASK-4-STREAMING-CHAT_RESULTS: "${{steps.task-4-streaming-chat.outputs.result}}"
+      with:
+        runners: task-1-call-openai,task-2-call-gemini,task-3-compare-models,task-4-streaming-chat
